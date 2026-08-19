@@ -25,100 +25,165 @@ $pending_comments = $comment_obj->countPending();
 $latest_articles = $article_obj->getAll(5, 0);
 ?>
 
+<!-- Bổ sung CSS cho mượt UI -->
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+    .icon-box {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .bg-blue-light { background: #e0f2fe; color: #0284c7; }
+    .bg-emerald-light { background: #d1fae5; color: #059669; }
+    .bg-amber-light { background: #fef3c7; color: #d97706; }
+    .bg-purple-light { background: #f3e8ff; color: #7c3aed; }
+    
+    .content-card {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .badge-category {
+        background-color: #eff6ff;
+        color: #2563eb;
+        font-weight: 600;
+        border-radius: 20px;
+        padding: 0.35rem 0.8rem;
+    }
+</style>
+
 <!-- Thống Kê Chính -->
-<div class="row g-4 mb-5">
+<div class="row g-4 mb-4 mt-1">
     <!-- Bài Viết -->
-    <div class="col-md-6 col-lg-3">
-        <div class="card dashboard-card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title text-muted">📰 Tổng Bài Viết</h6>
-                <div class="stat-number"><?= $total_articles ?></div>
-                <small class="text-muted"><a href="articles.php">Xem tất cả →</a></small>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted fw-semibold small text-uppercase">Tổng Bài Viết</span>
+                    <h2 class="fw-bold mb-0 mt-1"><?= $total_articles ?></h2>
+                    <a href="articles.php" class="text-primary text-decoration-none small fw-semibold">Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+                <div class="icon-box bg-blue-light">
+                    <i class="fa-solid fa-newspaper"></i>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Danh Mục -->
-    <div class="col-md-6 col-lg-3">
-        <div class="card dashboard-card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title text-muted">📁 Danh Mục</h6>
-                <div class="stat-number"><?= $total_categories ?></div>
-                <small class="text-muted"><a href="categories.php">Quản lý →</a></small>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted fw-semibold small text-uppercase">Danh Mục</span>
+                    <h2 class="fw-bold mb-0 mt-1"><?= $total_categories ?></h2>
+                    <a href="categories.php" class="text-success text-decoration-none small fw-semibold">Quản lý <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+                <div class="icon-box bg-emerald-light">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Bình Luận -->
-    <div class="col-md-6 col-lg-3">
-        <div class="card dashboard-card border-0 shadow-sm warning">
-            <div class="card-body">
-                <h6 class="card-title text-muted">💬 Bình Luận Chờ Duyệt</h6>
-                <div class="stat-number"><?= $pending_comments ?></div>
-                <small class="text-muted"><a href="comments.php">Duyệt ngay →</a></small>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted fw-semibold small text-uppercase">Bình Luận Chờ</span>
+                    <h2 class="fw-bold mb-0 mt-1 text-warning"><?= $pending_comments ?></h2>
+                    <a href="comments.php" class="text-warning text-decoration-none small fw-semibold">Duyệt ngay <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+                <div class="icon-box bg-amber-light">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Người Dùng -->
-    <div class="col-md-6 col-lg-3">
-        <div class="card dashboard-card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title text-muted">👥 Người Dùng</h6>
-                <div class="stat-number"><?= $total_users ?></div>
-                <small class="text-muted"><a href="users.php">Quản lý →</a></small>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted fw-semibold small text-uppercase">Người Dùng</span>
+                    <h2 class="fw-bold mb-0 mt-1"><?= $total_users ?></h2>
+                    <a href="users.php" class="text-purple text-decoration-none small fw-semibold" style="color: #7c3aed;">Chi tiết <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+                <div class="icon-box bg-purple-light">
+                    <i class="fa-solid fa-users"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 mb-4">
     <!-- Bài Viết Mới Nhất -->
     <div class="col-lg-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-bold">📰 Bài Viết Mới Nhất</h6>
+        <div class="card content-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-fire text-danger me-2"></i>Bài Viết Mới Nhất</h5>
+                <a href="articles.php" class="btn btn-sm btn-outline-primary rounded-pill px-3">Tất cả</a>
             </div>
+            
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr class="table-light">
-                            <th>Tiêu Đề</th>
-                            <th>Danh Mục</th>
-                            <th>Lượt Xem</th>
-                            <th>Ngày Tạo</th>
-                            <th>Hành Động</th>
+                <table class="table align-middle mb-0 table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-muted small text-uppercase">Tiêu Đề</th>
+                            <th class="text-muted small text-uppercase">Danh Mục</th>
+                            <th class="text-muted small text-uppercase">Lượt Xem</th>
+                            <th class="text-muted small text-uppercase">Ngày Tạo</th>
+                            <th class="text-end text-muted small text-uppercase">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!empty($latest_articles)): ?>
                             <?php foreach ($latest_articles as $article): ?>
                                 <tr>
-                                    <td>
-                                        <strong><?= htmlspecialchars(mb_substr($article['title'], 0, 40)) ?></strong>
+                                    <td class="fw-semibold" style="max-width: 200px;">
+                                        <div class="text-truncate" title="<?= htmlspecialchars($article['title']) ?>">
+                                            <?= htmlspecialchars($article['title']) ?>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">
+                                        <span class="badge badge-category">
                                             <?= htmlspecialchars($article['category_name'] ?? 'Chung') ?>
                                         </span>
                                     </td>
-                                    <td><?= $article['views'] ?? 0 ?></td>
-                                    <td><?= formatDate($article['created_at'], 'd/m/Y') ?></td>
+                                    <td><span class="badge bg-light text-dark border"><i class="fa-regular fa-eye me-1"></i><?= $article['views'] ?? 0 ?></span></td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="edit_article.php?id=<?= $article['id'] ?>" class="btn btn-warning">✏️</a>
-                                            <a href="articles.php?delete=<?= $article['id'] ?>" class="btn btn-danger" 
-                                               onclick="return confirmDelete('Xóa bài viết này?')">🗑️</a>
+                                        <small class="text-muted">
+                                            <?= date('d/m/Y', strtotime($article['created_at'])) ?>
+                                        </small>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="edit_article.php?id=<?= $article['id'] ?>" class="btn btn-light text-warning" title="Sửa"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="articles.php?delete=<?= $article['id'] ?>" class="btn btn-light text-danger" onclick="return confirm('Xóa bài viết này?')" title="Xóa"><i class="fa-solid fa-trash"></i></a>
                                         </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    Chưa có bài viết nào
-                                </td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Chưa có bài viết nào!</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -129,48 +194,41 @@ $latest_articles = $article_obj->getAll(5, 0);
     <!-- Thông Tin Nhanh -->
     <div class="col-lg-4">
         <!-- Thống Kê Tổng Hợp -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-bold">📊 Thống Kê Tổng Hợp</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3 pb-3 border-bottom">
-                    <div class="d-flex justify-content-between">
-                        <span>Tổng Bài Viết:</span>
-                        <strong><?= $total_articles ?></strong>
-                    </div>
+        <div class="card content-card p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Thống Kê Nhanh</h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                    <span class="text-muted"><i class="fa-solid fa-newspaper me-2 text-primary"></i>Tổng Bài Viết:</span>
+                    <span class="fw-bold"><?= $total_articles ?></span>
                 </div>
-                <div class="mb-3 pb-3 border-bottom">
-                    <div class="d-flex justify-content-between">
-                        <span>Tổng Bình Luận:</span>
-                        <strong><?= $total_comments ?></strong>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                    <span class="text-muted"><i class="fa-solid fa-comments me-2 text-info"></i>Tổng Bình Luận:</span>
+                    <span class="fw-bold"><?= $total_comments ?></span>
                 </div>
-                <div class="mb-3 pb-3 border-bottom">
-                    <div class="d-flex justify-content-between">
-                        <span>Chờ Duyệt:</span>
-                        <strong class="text-warning"><?= $pending_comments ?></strong>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                    <span class="text-muted"><i class="fa-solid fa-circle-exclamation me-2 text-warning"></i>Chờ Duyệt:</span>
+                    <span class="fw-bold text-warning"><?= $pending_comments ?></span>
                 </div>
-                <div class="d-flex justify-content-between">
-                    <span>Người Dùng:</span>
-                    <strong><?= $total_users ?></strong>
+                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                    <span class="text-muted"><i class="fa-solid fa-user-shield me-2 text-success"></i>Quản trị viên:</span>
+                    <span class="fw-bold"><?= $total_admins ?></span>
                 </div>
             </div>
         </div>
 
         <!-- Liên Kết Nhanh -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-bold">⚡ Liên Kết Nhanh</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="articles.php" class="btn btn-outline-primary">➕ Thêm Bài Viết</a>
-                    <a href="categories.php" class="btn btn-outline-secondary">➕ Thêm Danh Mục</a>
-                    <a href="comments.php" class="btn btn-outline-warning">🔔 Duyệt Bình Luận</a>
-                    <a href="users.php" class="btn btn-outline-info">👥 Quản Lý Người Dùng</a>
-                </div>
+        <div class="card content-card p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Liên Kết Nhanh</h5>
+            <div class="d-grid gap-2">
+                <a href="articles.php" class="btn btn-primary rounded-3 text-start py-2">
+                    <i class="fa-solid fa-plus me-2"></i> Thêm Bài Viết
+                </a>
+                <a href="categories.php" class="btn btn-outline-secondary rounded-3 text-start py-2">
+                    <i class="fa-solid fa-folder-plus me-2"></i> Thêm Danh Mục
+                </a>
+                <a href="comments.php" class="btn btn-outline-warning rounded-3 text-start py-2">
+                    <i class="fa-solid fa-check-double me-2"></i> Duyệt Bình Luận
+                </a>
             </div>
         </div>
     </div>

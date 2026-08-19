@@ -15,7 +15,7 @@ require_once __DIR__ . '/classes/Category.php';
 $article = new Article($pdo);
 $category = new Category($pdo);
 
-// Lấy danh sách bài viết mới nhất
+// Lấy danh sách bài viết mới nhất và danh mục
 $articles = $article->getAll(12, 0);
 $categories = $category->getAll();
 ?>
@@ -32,12 +32,12 @@ $categories = $category->getAll();
 
 <?php require_once 'includes/header.php'; ?>
 
-<!-- Hero Section -->
-<section class="hero-section bg-gradient py-5" style="background: linear-gradient(135deg, #006633 0%, #004d24 100%);">
-    <div class="container-lg text-center text-white">
-        <h1 class="display-4 fw-bold mb-3">🏖️ Chào Mừng Đến Với Cà Mau</h1>
-        <p class="lead mb-4">Khám phá vẻ đẹp thiên nhiên, văn hóa, và ẩm thực độc đáo của mảnh đất phía Nam</p>
-        <a href="#articles" class="btn btn-warning btn-lg">📖 Bắt Đầu Đọc</a>
+<!-- Hero Section dạng ảnh nền full-width -->
+<section class="hero-section text-white text-center position-relative py-5" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('assets/images/Cà-mau.jpg'); background-size: cover; background-position: center; min-height: 450px; display: flex; align-items: center;">
+    <div class="container-lg">
+        <h1 class="display-4 fw-bold mb-3 text-white">🏖️ Chào Mừng Đến Với Cà Mau</h1>
+        <p class="lead mb-4 text-light">Khám phá vẻ đẹp thiên nhiên, văn hóa, và ẩm thực độc đáo của mảnh đất phía Nam</p>
+        <a href="#articles" class="btn btn-warning btn-lg fw-bold px-4 py-3 shadow">📖 Bắt Đầu Đọc Ngay</a>
     </div>
 </section>
 
@@ -88,7 +88,7 @@ $categories = $category->getAll();
 
     <hr class="my-5">
 
-    <!-- Tất Cả Bài Viết -->
+    <!-- Tất Cả Bài Viết + Sidebar Lọc -->
     <section id="articles">
         <div class="mb-4">
             <h2 class="display-6 fw-bold">📚 Tất Cả Bài Viết</h2>
@@ -96,40 +96,50 @@ $categories = $category->getAll();
         </div>
 
         <div class="row g-4">
-            <?php if (!empty($articles)): ?>
-                <?php foreach ($articles as $item): ?>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift" style="min-height: 100%; display: flex; flex-direction: column;">
-                            <div class="position-relative">
-                                <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" 
-                                     class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>"
-                                     style="height: 180px; object-fit: cover; display: block;"
-                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 180%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22180%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';" >
-                                <span class="badge bg-info position-absolute top-0 start-0 m-2">
-                                    <?= htmlspecialchars($item['category_name'] ?? 'Chung') ?>
-                                </span>
-                            </div>
-                            <div class="card-body d-flex flex-column" style="flex-grow: 1;">
-                                <h6 class="card-title fw-bold text-dark" style="line-height: 1.3; height: 2.6em; overflow: hidden; white-space: normal;"><?= htmlspecialchars($item['title']) ?></h6>
-                                <p class="card-text text-muted small" style="height: 3em; line-height: 1.5; overflow: hidden; white-space: normal;"><?= strip_tags($item['content']) ?></p>
-                                <div class="d-flex justify-content-between align-items-center mt-2 small text-secondary">
-                                    <span>👁️ <?= $item['views'] ?? 0 ?></span>
-                                    <span>❤️ <?= $item['real_likes'] ?? 0 ?></span>
+            <!-- Cột Sidebar Bộ Lọc bên trái -->
+            <div class="col-lg-3 col-md-4">
+                <?php require_once 'includes/sidebar.php'; ?>
+            </div>
+
+            <!-- Cột Danh sách bài viết bên phải -->
+            <div class="col-lg-9 col-md-8">
+                <div class="row g-4">
+                    <?php if (!empty($articles)): ?>
+                        <?php foreach ($articles as $item): ?>
+                            <div class="col-lg-4 col-md-6 col-sm-6">
+                                <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift" style="min-height: 100%; display: flex; flex-direction: column;">
+                                    <div class="position-relative">
+                                        <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" 
+                                             class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>"
+                                             style="height: 180px; object-fit: cover; display: block;"
+                                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 180%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22180%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';" >
+                                        <span class="badge bg-info position-absolute top-0 start-0 m-2">
+                                            <?= htmlspecialchars($item['category_name'] ?? 'Chung') ?>
+                                        </span>
+                                    </div>
+                                    <div class="card-body d-flex flex-column" style="flex-grow: 1;">
+                                        <h6 class="card-title fw-bold text-dark" style="line-height: 1.3; height: 2.6em; overflow: hidden; white-space: normal;"><?= htmlspecialchars($item['title']) ?></h6>
+                                        <p class="card-text text-muted small" style="height: 3em; line-height: 1.5; overflow: hidden; white-space: normal;"><?= strip_tags($item['content']) ?></p>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 small text-secondary">
+                                            <span>👁️ <?= $item['views'] ?? 0 ?></span>
+                                            <span>❤️ <?= $item['real_likes'] ?? 0 ?></span>
+                                        </div>
+                                        <a href="detail.php?id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-primary mt-3">
+                                            Xem Chi Tiết
+                                        </a>
+                                    </div>
                                 </div>
-                                <a href="detail.php?id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-primary mt-3">
-                                    Xem Chi Tiết
-                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12">
+                            <div class="alert alert-info" role="alert">
+                                📭 Chưa có bài viết nào.
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="col-12">
-                    <div class="alert alert-info" role="alert">
-                        📭 Chưa có bài viết nào.
-                    </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
     </section>
 

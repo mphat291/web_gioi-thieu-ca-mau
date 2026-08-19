@@ -1,132 +1,110 @@
 <?php
-/**
- * admin_layout.php - Template chung cho admin panel
- * Sử dụng Bootstrap 5
- * 
- * Cách dùng:
- * <?php 
- * $page_title = "Quản Lý Bài Viết";
- * require_once 'admin_layout.php';
- * ?>
- * <!-- Nội dung trang admin ở đây -->
- * <?php require_once 'admin_layout_end.php'; ?>
- */
+// admin/admin_layout.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Kích hoạt hiển thị lỗi nếu có
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-session_start();
-require_once '../config/db.php';
-require_once '../includes/functions.php';
-require_once '../includes/auth.php';
-
-// Kiểm tra quyền admin
-requireAdmin();
-
-// Cấu hình mặc định
-$page_title = $page_title ?? 'Dashboard';
-$current_page = basename($_SERVER['PHP_SELF'], '.php');
+require_once __DIR__ . '/../config/db.php';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($page_title) ?> - Admin</title>
+    <title><?= $page_title ?? 'Admin Panel' ?></title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/admin.css">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Sidebar Responsive */
+        #sidebar {
+            min-width: 240px;
+            max-width: 240px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        #sidebar.active {
+            margin-left: -240px;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -240px;
+            }
+            #sidebar.active {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<!-- Navigation -->
-<nav class="navbar navbar-dark bg-dark sticky-top">
-    <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">⚙️ Admin Panel</span>
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<!-- TOP NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top px-3">
+    <div class="container-fluid p-0">
+        <!-- Logo & Nút Toggle Sidebar -->
+        <div class="d-flex align-items-center">
+            <a class="navbar-brand fw-bold me-3" href="index.php">
+                ⚙️ Admin Panel
+            </a>
+            <!-- Nút 3 gạch đã được bật tính năng -->
+            <button class="btn btn-outline-light btn-sm" id="sidebarToggle" type="button" title="Ẩn/Hiện Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Các nút thao tác nhanh góc phải Navbar -->
+        <div class="d-flex align-items-center gap-2">
+            <!-- Nút Quay về Trang Chủ User -->
+            <a href="../index.php" class="btn btn-primary btn-sm rounded-pill px-3" target="_blank" title="Xem trang chủ khách">
+                <i class="fa-solid fa-house me-1"></i> Xem Website
+            </a>
+            <!-- Nút Đăng xuất -->
+            <a href="logout.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng xuất
+            </a>
+        </div>
     </div>
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <nav class="col-md-2 d-md-block bg-light sidebar offcanvas-md offcanvas-start" tabindex="-1" id="sidebar">
-            <div class="position-sticky pt-3">
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>📊 CHÍNH</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'index' ? 'active' : '' ?>" href="index.php">
-                            📊 Dashboard
-                        </a>
-                    </li>
-                </ul>
+<div class="d-flex">
+    <!-- SIDEBAR LEFT -->
+    <div class="bg-white border-end p-3" id="sidebar">
+        <div class="text-uppercase text-muted fw-bold small mb-2">Chính</div>
+        <ul class="nav nav-pills flex-column mb-3">
+            <li class="nav-item">
+                <a href="index.php" class="nav-link <?= ($page_title == 'Dashboard') ? 'active' : 'text-dark' ?>">
+                    📊 Dashboard
+                </a>
+            </li>
+        </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>📝 NỘI DUNG</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'articles' ? 'active' : '' ?>" href="articles.php">
-                            📰 Bài Viết
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'categories' ? 'active' : '' ?>" href="categories.php">
-                            📁 Danh Mục
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'comments' ? 'active' : '' ?>" href="comments.php">
-                            💬 Bình Luận
-                        </a>
-                    </li>
-                </ul>
+        <div class="text-uppercase text-muted fw-bold small mb-2">Nội dung</div>
+        <ul class="nav nav-pills flex-column mb-3">
+            <li><a href="articles.php" class="nav-link text-dark">📝 Bài Viết</a></li>
+            <li><a href="categories.php" class="nav-link text-dark">📁 Danh Mục</a></li>
+            <li><a href="comments.php" class="nav-link text-dark">💬 Bình Luận</a></li>
+        </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>⚡ QUẢN LÝ</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'contacts' ? 'active' : '' ?>" href="contacts.php">
-                            📧 Liên Hệ
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $current_page === 'users' ? 'active' : '' ?>" href="users.php">
-                            👥 Người Dùng
-                        </a>
-                    </li>
-                </ul>
+        <div class="text-uppercase text-muted fw-bold small mb-2">Quản lý</div>
+        <ul class="nav nav-pills flex-column mb-3">
+            <li><a href="contacts.php" class="nav-link text-dark">🎯 Liên Hệ</a></li>
+            <li><a href="users.php" class="nav-link text-dark">👥 Người Dùng</a></li>
+        </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>⚙️ HỆ THỐNG</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="../index.php" target="_blank">
-                            🌐 Xem Website
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-danger" href="../logout.php">
-                            🚪 Đăng Xuất
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+        <div class="text-uppercase text-muted fw-bold small mb-2">Hệ thống</div>
+        <ul class="nav nav-pills flex-column">
+            <li><a href="../index.php" class="nav-link text-primary" target="_blank">🌐 Xem Website</a></li>
+            <li><a href="logout.php" class="nav-link text-danger">🚪 Đăng Xuất</a></li>
+        </ul>
+    </div>
 
-        <!-- Main Content -->
-        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php">📊 Dashboard</a></li>
-                    <li class="breadcrumb-item active"><?= htmlspecialchars($page_title) ?></li>
-                </ol>
-            </nav>
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h2"><?= htmlspecialchars($page_title) ?></h1>
-            </div>
+    <!-- MAIN CONTENT -->
+    <div class="flex-grow-1 p-4" id="main-content">

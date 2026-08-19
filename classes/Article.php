@@ -163,21 +163,21 @@ class Article {
     }
 
     /**
-     * Kiểm tra user đã yêu thích (save) bài viết chưa
+     * Kiểm tra user đã lưu (bookmark) bài viết chưa
      */
     public function isFavoritedByUser($article_id, $user_id) {
-        $stmt = $this->conn->prepare("SELECT id FROM favorites WHERE article_id = ? AND user_id = ?");
+        $stmt = $this->conn->prepare("SELECT id FROM bookmarks WHERE article_id = ? AND user_id = ?");
         $stmt->execute([$article_id, $user_id]);
         return $stmt->fetch() !== false;
     }
 
     /**
-     * Thêm favorite từ user
+     * Thêm bài viết vào danh sách bookmark
      */
     public function addFavoriteByUser($article_id, $user_id) {
         try {
             $stmt = $this->conn->prepare(
-                "INSERT INTO favorites (article_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)"
+                "INSERT INTO bookmarks (article_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)"
             );
             return $stmt->execute([$article_id, $user_id]);
         } catch (Exception $e) {
@@ -186,10 +186,10 @@ class Article {
     }
 
     /**
-     * Bỏ favorite từ user
+     * Bỏ lưu (bookmark) bài viết
      */
     public function removeFavoriteByUser($article_id, $user_id) {
-        $stmt = $this->conn->prepare("DELETE FROM favorites WHERE article_id = ? AND user_id = ?");
+        $stmt = $this->conn->prepare("DELETE FROM bookmarks WHERE article_id = ? AND user_id = ?");
         return $stmt->execute([$article_id, $user_id]);
     }
 

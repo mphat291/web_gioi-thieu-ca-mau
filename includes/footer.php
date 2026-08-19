@@ -25,7 +25,7 @@
                     <li><a href="category.php?cat=1" class="text-decoration-none text-light">📰 Du Lịch</a></li>
                     <li><a href="category.php?cat=2" class="text-decoration-none text-light">🎭 Văn Hóa</a></li>
                     <li><a href="category.php?cat=3" class="text-decoration-none text-light">🍜 Ẩm Thực</a></li>
-                    <li><a href="category.php?cat=4" class="text-decoration-none text-light">🎉 Sự Kiện</a></li>
+                    <li><a href="category.php?cat=4" class="text-decoration-none text-light">🎉 Con người & giai thoại</a></li>
                 </ul>
             </div>
 
@@ -56,7 +56,7 @@
 
         <!-- Copyright -->
         <div class="text-center small text-secondary">
-            <p class="mb-0">&copy; 2024 <strong>Khám Phá Cà Mau</strong>. Bảo lưu mọi quyền. | Thiết kế bởi Web Team</p>
+            <p class="mb-0">&copy; 2026 <strong>Khám Phá Cà Mau</strong>. Bảo lưu mọi quyền. | Thiết kế bởi Team To6</p>
         </div>
     </div>
 </footer>

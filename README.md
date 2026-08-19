@@ -45,7 +45,9 @@ web_gioi-thieu-ca-mau/
 ├── post_comment.php        # Xử lý bình luận
 ├── favorite.php            # Bài viết yêu thích
 ├── history.php             # Lịch sử xem
+├── saved.php               # Lưu
 └── README.md               # File hướng dẫn này
+
 ```
 
 ## 🎯 Cách Sử Dụng
