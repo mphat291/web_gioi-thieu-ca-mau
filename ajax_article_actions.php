@@ -1,15 +1,17 @@
 <?php
 session_start();
 require_once 'config/db.php';
+require_once 'includes/functions.php';
+require_once 'classes/Article.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user'])) {
+if (!isLoggedIn()) {
     echo json_encode(['status' => 'error', 'message' => 'Bạn cần đăng nhập để thực hiện hành động này.']);
     exit;
 }
 
-$user_id = $_SESSION['user']['id'];
+$user_id = $_SESSION['user_id'];
 $article_id = (int)($_POST['article_id'] ?? 0);
 $action = $_POST['action'] ?? '';
 

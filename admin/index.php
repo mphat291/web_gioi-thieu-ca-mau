@@ -1,75 +1,179 @@
 <?php
-require_once '../config/db.php';
+$page_title = "Dashboard";
+require_once 'admin_layout.php';
 
-// Thống kê số lượng
-$total_articles = $conn->query("SELECT COUNT(*) FROM articles")->fetchColumn();
-$total_categories = $conn->query("SELECT COUNT(*) FROM categories")->fetchColumn();
-$total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
-$total_contacts = $conn->query("SELECT COUNT(*) FROM contacts")->fetchColumn();
+// Khởi tạo các classes
+require_once '../classes/Article.php';
+require_once '../classes/Category.php';
+require_once '../classes/User.php';
+require_once '../classes/Comment.php';
+
+$article_obj = new Article($pdo);
+$category_obj = new Category($pdo);
+$user_obj = new User($pdo);
+$comment_obj = new Comment($pdo);
+
+// Lấy thống kê
+$total_articles = $article_obj->count();
+$total_categories = $category_obj->count();
+$total_users = $user_obj->count();
+$total_admins = $user_obj->countAdmins();
+$total_comments = $comment_obj->count();
+$pending_comments = $comment_obj->countPending();
+
+// Lấy bài viết mới nhất
+$latest_articles = $article_obj->getAll(5, 0);
 ?>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Trang Quản Trị - Cà Mau Văn Hóa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="d-flex">
-        <!-- Sidebar Menu Admin -->
-        <div class="bg-dark text-white p-3 min-vh-100" style="width: 250px;">
-            <h4 class="text-center text-warning">Admin Cà Mau</h4>
-            <hr>
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item"><a href="index.php" class="nav-link text-white active">📊 Dashboard</a></li>
-                <li><a href="categories.php" class="nav-link text-white">📁 Quản lý Danh mục</a></li>
-                <li><a href="articles.php" class="nav-link text-white">📝 Quản lý Bài viết</a></li>
-                <li><a href="comments.php" class="nav-link text-white">💬 Kiểm duyệt Bình luận</a></li>
-                <li><a href="contacts.php" class="nav-link text-white">📬 Quản lý Liên hệ</a></li>
-                <li><a href="users.php" class="nav-link text-white">👤 Quản lý Tài khoản</a></li>
-                <li class="mt-4"><a href="../index.php" class="nav-link text-info">🌐 Xem Trang chủ Web</a></li>
-            </ul>
+<!-- Thống Kê Chính -->
+<div class="row g-4 mb-5">
+    <!-- Bài Viết -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">📰 Tổng Bài Viết</h6>
+                <div class="stat-number"><?= $total_articles ?></div>
+                <small class="text-muted"><a href="articles.php">Xem tất cả →</a></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh Mục -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">📁 Danh Mục</h6>
+                <div class="stat-number"><?= $total_categories ?></div>
+                <small class="text-muted"><a href="categories.php">Quản lý →</a></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bình Luận -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card border-0 shadow-sm warning">
+            <div class="card-body">
+                <h6 class="card-title text-muted">💬 Bình Luận Chờ Duyệt</h6>
+                <div class="stat-number"><?= $pending_comments ?></div>
+                <small class="text-muted"><a href="comments.php">Duyệt ngay →</a></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Người Dùng -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card dashboard-card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title text-muted">👥 Người Dùng</h6>
+                <div class="stat-number"><?= $total_users ?></div>
+                <small class="text-muted"><a href="users.php">Quản lý →</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Bài Viết Mới Nhất -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold">📰 Bài Viết Mới Nhất</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="table-light">
+                            <th>Tiêu Đề</th>
+                            <th>Danh Mục</th>
+                            <th>Lượt Xem</th>
+                            <th>Ngày Tạo</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($latest_articles)): ?>
+                            <?php foreach ($latest_articles as $article): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?= htmlspecialchars(mb_substr($article['title'], 0, 40)) ?></strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <?= htmlspecialchars($article['category_name'] ?? 'Chung') ?>
+                                        </span>
+                                    </td>
+                                    <td><?= $article['views'] ?? 0 ?></td>
+                                    <td><?= formatDate($article['created_at'], 'd/m/Y') ?></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="edit_article.php?id=<?= $article['id'] ?>" class="btn btn-warning">✏️</a>
+                                            <a href="articles.php?delete=<?= $article['id'] ?>" class="btn btn-danger" 
+                                               onclick="return confirmDelete('Xóa bài viết này?')">🗑️</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    Chưa có bài viết nào
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông Tin Nhanh -->
+    <div class="col-lg-4">
+        <!-- Thống Kê Tổng Hợp -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold">📊 Thống Kê Tổng Hợp</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                        <span>Tổng Bài Viết:</span>
+                        <strong><?= $total_articles ?></strong>
+                    </div>
+                </div>
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                        <span>Tổng Bình Luận:</span>
+                        <strong><?= $total_comments ?></strong>
+                    </div>
+                </div>
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                        <span>Chờ Duyệt:</span>
+                        <strong class="text-warning"><?= $pending_comments ?></strong>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Người Dùng:</span>
+                    <strong><?= $total_users ?></strong>
+                </div>
+            </div>
         </div>
 
-        <!-- Nội dung chính Dashboard -->
-        <div class="p-4 flex-grow-1">
-            <h2>Bảng Điều Khiển Quản Trị</h2>
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card text-bg-primary mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Bài viết</h5>
-                            <p class="card-text fs-3"><?= $total_articles ?></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-bg-success mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Danh mục</h5>
-                            <p class="card-text fs-3"><?= $total_categories ?></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-bg-warning mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Bình luận</h5>
-                            <p class="card-text fs-3"><?= $total_comments ?></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-bg-danger mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Liên hệ</h5>
-                            <p class="card-text fs-3"><?= $total_contacts ?></p>
-                        </div>
-                    </div>
+        <!-- Liên Kết Nhanh -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold">⚡ Liên Kết Nhanh</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="articles.php" class="btn btn-outline-primary">➕ Thêm Bài Viết</a>
+                    <a href="categories.php" class="btn btn-outline-secondary">➕ Thêm Danh Mục</a>
+                    <a href="comments.php" class="btn btn-outline-warning">🔔 Duyệt Bình Luận</a>
+                    <a href="users.php" class="btn btn-outline-info">👥 Quản Lý Người Dùng</a>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+
+<?php require_once 'admin_layout_end.php'; ?>
