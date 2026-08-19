@@ -5,38 +5,19 @@ error_reporting(E_ALL);
 
 session_start();
 
-// Nhập file kết nối CSDL
-if (file_exists(__DIR__ . '/config/db.php')) {
-    require_once __DIR__ . '/config/db.php';
-} else if (file_exists(__DIR__ . '/includes/db.php')) {
-    require_once __DIR__ . '/includes/db.php';
-} else if (file_exists(__DIR__ . '/db.php')) {
-    require_once __DIR__ . '/db.php';
-} else {
-    die("Lỗi: Không tìm thấy file kết nối CSDL (db.php). Vui lòng kiểm tra lại đường dẫn thư mục.");
-}
+// Nhập file cần thiết
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/classes/Article.php';
+require_once __DIR__ . '/classes/Category.php';
 
-// Đồng bộ biến kết nối CSDL (nếu file db.php dùng $conn hoặc $db thay vì $pdo)
-if (!isset($pdo)) {
-    if (isset($conn)) {
-        $pdo = $conn;
-    } else if (isset($db)) {
-        $pdo = $db;
-    } else {
-        die("Lỗi: Chưa khởi tạo được biến kết nối CSDL trong db.php");
-    }
-}
-
-// Lấy danh sách danh mục
-$stmt_cat = $pdo->query("SELECT * FROM categories");
-$categories = $stmt_cat->fetchAll();
+// Khởi tạo các object
+$article = new Article($pdo);
+$category = new Category($pdo);
 
 // Lấy danh sách bài viết mới nhất
-$stmt_art = $pdo->query("SELECT a.*, c.category_name 
-                        FROM articles a 
-                        LEFT JOIN categories c ON a.category_id = c.id 
-                        ORDER BY a.created_at DESC");
-$articles = $stmt_art->fetchAll();
+$articles = $article->getAll(12, 0);
+$categories = $category->getAll();
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -44,64 +25,129 @@ $articles = $stmt_art->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Khám Phá Cà Mau - Trang Chủ</title>
-    <style>
-        * { box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { margin: 0; padding: 0; background-color: #f4f6f9; }
-        header { background-color: #006633; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        header a { color: white; text-decoration: none; margin-left: 15px; }
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .card img { width: 100%; height: 180px; object-fit: cover; }
-        .card-body { padding: 15px; }
-        .card-title { font-size: 18px; margin: 0 0 10px 0; color: #333; }
-        .card-text { color: #666; font-size: 14px; line-height: 1.5; }
-        .card-meta { margin-top: 15px; font-size: 12px; color: #888; display: flex; justify-content: space-between; }
-        .btn { display: inline-block; padding: 8px 15px; background: #006633; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px; }
-        .user-info { font-weight: bold; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="bg-light">
 
-<header>
-    <h2>Văn Hóa & Du Lịch Cà Mau</h2>
-    <nav>
-        <a href="index.php">Trang chủ</a>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <span class="user-info">Xin chào, <?= htmlspecialchars($_SESSION['username'] ?? 'Độc giả') ?></span>
-            <a href="logout.php">Đăng xuất</a>
-        <?php else: ?>
-            <a href="login.php">Đăng nhập</a>
-            <a href="register.php">Đăng ký</a>
-        <?php endif; ?>
-        <a href="contact.php">Liên hệ</a>
-    </nav>
-</header>
+<?php require_once 'includes/header.php'; ?>
 
-<div class="container">
-    <h3>Bài viết mới nhất</h3>
-    <div class="grid">
-        <?php if (!empty($articles)): ?>
-            <?php foreach ($articles as $item): ?>
-                <div class="card">
-                    <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" alt="Ảnh bài viết" onerror="this.src='https://via.placeholder.com/300x180?text=Ca+Mau'">
-                    <div class="card-body">
-                        <small style="color: #006633; font-weight: bold;"><?= htmlspecialchars($item['category_name'] ?? 'Chung') ?></small>
-                        <h4 class="card-title"><?= htmlspecialchars($item['title']) ?></h4>
-                        <p class="card-text"><?= htmlspecialchars(mb_substr(strip_tags($item['content']), 0, 100)) ?>...</p>
-                        <a href="detail.php?id=<?= $item['id'] ?>" class="btn">Đọc tiếp</a>
-                        <div class="card-meta">
-                            <span>Lượt xem: <?= $item['views'] ?></span>
-                            <span>Lượt thích: ❤️ <?= $item['likes'] ?></span>
+<!-- Hero Section -->
+<section class="hero-section bg-gradient py-5" style="background: linear-gradient(135deg, #006633 0%, #004d24 100%);">
+    <div class="container-lg text-center text-white">
+        <h1 class="display-4 fw-bold mb-3">🏖️ Chào Mừng Đến Với Cà Mau</h1>
+        <p class="lead mb-4">Khám phá vẻ đẹp thiên nhiên, văn hóa, và ẩm thực độc đáo của mảnh đất phía Nam</p>
+        <a href="#articles" class="btn btn-warning btn-lg">📖 Bắt Đầu Đọc</a>
+    </div>
+</section>
+
+<main class="container-lg py-5">
+    <!-- Bài Viết Nổi Bật -->
+    <section class="mb-5" id="featured">
+        <div class="mb-4">
+            <h2 class="display-6 fw-bold">🔥 Bài Viết Nổi Bật</h2>
+            <div class="border-bottom border-warning" style="width: 100px;"></div>
+        </div>
+        
+        <div class="row g-4">
+            <?php if (!empty($articles) && count($articles) > 0): ?>
+                <?php foreach (array_slice($articles, 0, 3) as $item): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift" style="min-height: 100%; display: flex; flex-direction: column;">
+                            <div class="position-relative">
+                                <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" 
+                                     class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>"
+                                     style="height: 200px; object-fit: cover; display: block;"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';">
+                                <span class="badge bg-success position-absolute top-0 start-0 m-2">
+                                    <?= htmlspecialchars($item['category_name'] ?? 'Chung') ?>
+                                </span>
+                            </div>
+                            <div class="card-body d-flex flex-column" style="flex-grow: 1;">
+                                <h5 class="card-title fw-bold text-dark" style="line-height: 1.3; height: 2.6em; overflow: hidden; white-space: normal;"><?= htmlspecialchars($item['title']) ?></h5>
+                                <p class="card-text text-muted" style="height: 4.5em; line-height: 1.5; overflow: hidden; white-space: normal;"><?= strip_tags($item['content']) ?></p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-secondary">
+                                        👁️ <?= $item['views'] ?? 0 ?> | ❤️ <?= $item['real_likes'] ?? 0 ?>
+                                    </small>
+                                </div>
+                                <a href="detail.php?id=<?= $item['id'] ?>" class="btn btn-sm btn-primary mt-3">
+                                    Đọc Tiếp →
+                                </a>
+                            </div>
                         </div>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="alert alert-info" role="alert">
+                    📭 Chưa có bài viết nào.
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p>Chưa có bài viết nào trong CSDL.</p>
-        <?php endif; ?>
-    </div>
-</div>
+            <?php endif; ?>
+        </div>
+    </section>
 
+    <hr class="my-5">
+
+    <!-- Tất Cả Bài Viết -->
+    <section id="articles">
+        <div class="mb-4">
+            <h2 class="display-6 fw-bold">📚 Tất Cả Bài Viết</h2>
+            <div class="border-bottom border-warning" style="width: 100px;"></div>
+        </div>
+
+        <div class="row g-4">
+            <?php if (!empty($articles)): ?>
+                <?php foreach ($articles as $item): ?>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift" style="min-height: 100%; display: flex; flex-direction: column;">
+                            <div class="position-relative">
+                                <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" 
+                                     class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>"
+                                     style="height: 180px; object-fit: cover; display: block;"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 180%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22180%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';" >
+                                <span class="badge bg-info position-absolute top-0 start-0 m-2">
+                                    <?= htmlspecialchars($item['category_name'] ?? 'Chung') ?>
+                                </span>
+                            </div>
+                            <div class="card-body d-flex flex-column" style="flex-grow: 1;">
+                                <h6 class="card-title fw-bold text-dark" style="line-height: 1.3; height: 2.6em; overflow: hidden; white-space: normal;"><?= htmlspecialchars($item['title']) ?></h6>
+                                <p class="card-text text-muted small" style="height: 3em; line-height: 1.5; overflow: hidden; white-space: normal;"><?= strip_tags($item['content']) ?></p>
+                                <div class="d-flex justify-content-between align-items-center mt-2 small text-secondary">
+                                    <span>👁️ <?= $item['views'] ?? 0 ?></span>
+                                    <span>❤️ <?= $item['real_likes'] ?? 0 ?></span>
+                                </div>
+                                <a href="detail.php?id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-primary mt-3">
+                                    Xem Chi Tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-12">
+                    <div class="alert alert-info" role="alert">
+                        📭 Chưa có bài viết nào.
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Call To Action -->
+    <section class="mt-5 p-5 bg-warning rounded-3 text-dark text-center">
+        <h3 class="fw-bold mb-3">📸 Bạn Có Câu Chuyện Hay?</h3>
+        <p class="mb-4">Chia sẻ kinh nghiệm du lịch, khám phá văn hóa, và ẩm thực Cà Mau của bạn với chúng tôi!</p>
+        <?php if (isLoggedIn()): ?>
+            <a href="admin/index.php" class="btn btn-primary btn-lg">📝 Viết Bài Viết</a>
+        <?php else: ?>
+            <a href="login.php" class="btn btn-primary btn-lg">🔓 Đăng Nhập Để Viết Bài</a>
+        <?php endif; ?>
+    </section>
+</main>
+
+<?php require_once 'includes/footer.php'; ?>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
