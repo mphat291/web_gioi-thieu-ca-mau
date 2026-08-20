@@ -1,59 +1,117 @@
 <?php
-session_start();
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+$page_title = "Quản Lý Báo Cáo Vi Phạm";
+require_once __DIR__ . '/../config/db.php';
 
-$page_title = "Báo Cáo Vi Phạm";
+// Xử lý các thao tác của Admin
+if (isset($_GET['action']) && isset($_GET['id']) && isset($_GET['type'])) {
+    $id = (int)$_GET['id'];
+    $type = $_GET['type'];
+    $action = $_GET['action'];
+
+    if ($action === 'delete') {
+        if ($type === 'comment' && isset($_GET['target_id'])) {
+            $comment_id = (int)$_GET['target_id'];
+            // Xóa bình luận và các báo cáo liên quan
+            $pdo->prepare("DELETE FROM comments WHERE id = ?")->execute([$comment_id]);
+            $pdo->prepare("DELETE FROM comment_reports WHERE comment_id = ?")->execute([$comment_id]);
+        } elseif ($type === 'user' && isset($_GET['target_id'])) {
+            $user_id = (int)$_GET['target_id'];
+            // Xóa tài khoản và các báo cáo liên quan
+            $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
+            $pdo->prepare("DELETE FROM user_reports WHERE reported_user_id = ?")->execute([$user_id]);
+        }
+    } elseif ($action === 'dismiss') {
+        // Chỉ bỏ qua / xóa bản ghi báo cáo
+        $table = ($type === 'comment') ? 'comment_reports' : 'user_reports';
+        $pdo->prepare("DELETE FROM $table WHERE id = ?")->execute([$id]);
+    }
+    header("Location: reports.php");
+    exit;
+}
+
 require_once 'admin_layout.php';
 
-// Đã sửa câu lệnh SQL: Lấy trực tiếp c.user_name thay vì c.user_id
-$sql = "SELECT r.*, c.content as comment_content, c.user_name as comment_owner, u.username as reporter_name
-        FROM comment_reports r
-        JOIN comments c ON r.comment_id = c.id
-        JOIN users u ON r.user_id = u.id
-        ORDER BY r.created_at DESC";
-$stmt = $pdo->query($sql);
-$reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Gộp báo cáo Comment và Báo cáo User
+$sql = "
+    SELECT cr.id, 'comment' AS type, u.username AS reporter, c.user_name AS target, c.id AS target_id, c.content AS detail, cr.reason, cr.created_at
+    FROM comment_reports cr
+    LEFT JOIN users u ON cr.user_id = u.id
+    LEFT JOIN comments c ON cr.comment_id = c.id
+    
+    UNION ALL
+    
+    SELECT ur.id, 'user' AS type, u1.username AS reporter, u2.username AS target, u2.id AS target_id, NULL AS detail, ur.reason, ur.created_at
+    FROM user_reports ur
+    LEFT JOIN users u1 ON ur.reporter_id = u1.id
+    LEFT JOIN users u2 ON ur.reported_user_id = u2.id
+    
+    ORDER BY created_at DESC
+";
+
+$reports = $pdo->query($sql)->fetchAll();
 ?>
 
-<h2 class="fw-bold mb-4">🚨 Quản Lý Báo Cáo Vi Phạm Bình Luận</h2>
-
-<div class="card border-0 shadow-sm rounded-3">
-    <div class="card-body">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold text-danger"><i class="fa-solid fa-flag me-2"></i> Danh Sách Báo Cáo Vi Phạm</h5>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Người Tố Cáo</th>
-                        <th>Nội Dung Bị Tố Cáo</th>
-                        <th>Tác Giả Bình Luận</th>
-                        <th>Lý Do Vi Phạm</th>
-                        <th>Thời Gian</th>
-                        <th>Hành Động</th>
+                        <th>#</th>
+                        <th>Loại báo cáo</th>
+                        <th>Người tố cáo</th>
+                        <th>Đối tượng bị tố cáo</th>
+                        <th>Lý do</th>
+                        <th>Ngày gửi</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($reports)): ?>
-                        <?php foreach ($reports as $rep): ?>
+                    <?php if (empty($reports)): ?>
+                        <tr><td colspan="7" class="text-center py-4 text-muted">Không có báo cáo nào.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($reports as $r): ?>
                             <tr>
-                                <td><?= $rep['id'] ?></td>
-                                <td><span class="fw-semibold text-primary"><?= htmlspecialchars($rep['reporter_name']) ?></span></td>
-                                <td><div class="text-truncate" style="max-width: 250px;" title="<?= htmlspecialchars($rep['comment_content']) ?>"><?= htmlspecialchars($rep['comment_content']) ?></div></td>
-                                <td><?= htmlspecialchars($rep['comment_owner']) ?></td>
-                                <td><span class="badge bg-danger"><?= htmlspecialchars($rep['reason']) ?></span></td>
-                                <td><small class="text-muted"><?= date('d/m/Y H:i', strtotime($rep['created_at'])) ?></small></td>
+                                <td><?= $r['id'] ?></td>
                                 <td>
-                                    <a href="delete_comment.php?id=<?= $rep['comment_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Ní có chắc muốn xóa bình luận vi phạm này không?')">
-                                        <i class="fa-solid fa-trash"></i> Xóa Bình Luận
+                                    <?php if ($r['type'] === 'comment'): ?>
+                                        <span class="badge bg-info text-dark">Bình luận</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning text-dark">Người dùng</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><strong><?= htmlspecialchars($r['reporter'] ?? 'Ẩn danh') ?></strong></td>
+                                <td>
+                                    <?php if ($r['target']): ?>
+                                        <strong><?= htmlspecialchars($r['target']) ?></strong>
+                                        <?php if (!empty($r['detail'])): ?>
+                                            <br><small class="text-muted">"<?= htmlspecialchars($r['detail']) ?>"</small>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <em class="text-muted">(Đã bị xóa)</em>
+                                    <?php endif; ?>
+                                </td>
+                                <td><span class="text-danger"><?= htmlspecialchars($r['reason']) ?></span></td>
+                                <td><?= date('d/m/Y H:i', strtotime($r['created_at'])) ?></td>
+                                <td>
+                                    <?php if ($r['target']): ?>
+                                        <a href="reports.php?action=delete&id=<?= $r['id'] ?>&type=<?= $r['type'] ?>&target_id=<?= $r['target_id'] ?>" 
+                                           class="btn btn-sm btn-danger me-1" 
+                                           onclick="return confirm('Bạn có chắc muốn xóa <?= $r['type'] === 'comment' ? 'bình luận' : 'tài khoản' ?> này?')">
+                                            <i class="fa-solid fa-trash me-1"></i> Xóa
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="reports.php?action=dismiss&id=<?= $r['id'] ?>&type=<?= $r['type'] ?>" 
+                                       class="btn btn-sm btn-secondary" 
+                                       onclick="return confirm('Bỏ qua báo cáo này?')">
+                                        <i class="fa-solid fa-xmark me-1"></i> Bỏ qua
                                     </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">Chưa có báo cáo vi phạm nào.</td>
-                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -61,6 +119,4 @@ $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-</div></div></div>
-</body>
-</html>
+<?php require_once 'admin_layout_end.php'; ?>

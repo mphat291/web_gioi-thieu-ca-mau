@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-body">
                         <h5 class="fw-bold mb-2 text-primary"><i class="fa-solid fa-phone me-2"></i>Điện Thoại</h5>
                         <p class="text-muted mb-0">
-                            <a href="tel:+84123456789" class="text-decoration-none text-muted">+84 (123) 456 789</a>
+                            <a href="tel:+84123456789" class="text-decoration-none text-muted">+84 (09) 423 987 74</a>
                         </p>
                     </div>
                 </div>
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-body">
                         <h5 class="fw-bold mb-2 text-warning"><i class="fa-solid fa-envelope me-2"></i>Email</h5>
                         <p class="text-muted mb-0">
-                            <a href="mailto:info@camau.com" class="text-decoration-none text-muted">info@camau.com</a>
+                            <a href="mailto:info@camau.com" class="text-decoration-none text-muted">24210501030@student.bdu.edu.vn</a>
                         </p>
                     </div>
                 </div>

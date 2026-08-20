@@ -83,7 +83,7 @@ $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
         <div class="text-center py-5 bg-white rounded-4 shadow-sm">
             <i class="fa-regular fa-star fs-1 text-warning mb-3 d-block"></i>
-            <h5 class="fw-bold text-secondary">Ní chưa lưu bài viết nào hết!</h5>
+            <h5 class="fw-bold text-secondary">Bạn chưa lưu bài viết nào hết!</h5>
             <p class="text-muted">Bấm vào nút "Lưu" ở cuối bài viết để lưu lại đọc sau nhé.</p>
             <a href="index.php" class="btn btn-success rounded-pill px-4 mt-2">Khám phá bài viết ngay</a>
         </div>

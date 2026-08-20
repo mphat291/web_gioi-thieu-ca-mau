@@ -126,7 +126,7 @@ require_once 'admin_layout.php';
                                <a href="edit_article.php?id=<?= $art['id'] ?>" class="btn btn-sm btn-outline-warning me-1">
                                    <i class="fa-solid fa-pen"></i>
                                </a>
-                               <a href="articles.php?delete=<?= $art['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Ní chắc chắn muốn xóa bài viết này chứ?');">
+                               <a href="articles.php?delete=<?= $art['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn chắc chắn muốn xóa bài viết này chứ?');">
                                    <i class="fa-solid fa-trash"></i>
                                </a>
                             </td>

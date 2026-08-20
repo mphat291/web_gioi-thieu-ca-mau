@@ -69,7 +69,7 @@ require_once 'admin_layout.php';
                     <td><strong><?= htmlspecialchars($cat['category_name']) ?></strong></td>
                     <td><?= htmlspecialchars($cat['description']) ?></td>
                     <td>
-                        <a href="categories.php?delete=<?= $cat['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Ní có chắc muốn xóa không?');">
+                        <a href="categories.php?delete=<?= $cat['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa không?');">
                             <i class="fa-solid fa-trash"></i>
                         </a>
                     </td>

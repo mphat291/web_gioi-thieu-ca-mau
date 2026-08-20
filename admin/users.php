@@ -7,7 +7,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     if ($_GET['action'] === 'toggle_role') {
         $current_role = $_GET['role'] ?? 'user';
         $new_role = ($current_role === 'admin') ? 'user' : 'admin';
-        // Lưu ý: Nếu config/db.php của ní dùng biến $conn, hãy đổi $pdo thành $conn ở 2 dòng dưới nhé
         $stmt = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
         $stmt->execute([$new_role, $id]);
         header('Location: users.php?msg=role_updated');
@@ -20,8 +19,21 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     }
 }
 
-// Lấy danh sách thành viên
-$stmt = $pdo->query("SELECT * FROM users ORDER BY id DESC");
+// Phân trang cho Quản Lý Người Dùng (Hiển thị 5 người dùng mỗi trang)
+$limit = 5;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+// Đếm tổng số người dùng
+$total_users = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$total_pages = ceil($total_users / $limit);
+
+// Lấy danh sách thành viên theo trang
+$stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?");
+$stmt->bindValue(1, $limit, PDO::PARAM_INT);
+$stmt->bindValue(2, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Gọi Layout chung
@@ -79,7 +91,7 @@ require_once 'admin_layout.php';
                                         <a href="users.php?action=toggle_role&id=<?= $u['id'] ?>&role=<?= $u['role'] ?>" class="btn btn-outline-primary" title="Đổi quyền">
                                             <i class="fa-solid fa-user-shield"></i> <?= $u['role'] === 'admin' ? 'Hạ cấp' : 'Thăng cấp' ?>
                                         </a>
-                                        <a href="users.php?action=delete&id=<?= $u['id'] ?>" class="btn btn-danger" onclick="return confirm('Ní chắc chắn muốn xóa tài khoản này?')" title="Xóa">
+                                        <a href="users.php?action=delete&id=<?= $u['id'] ?>" class="btn btn-danger" onclick="return confirm('Bạn chắc chắn muốn xóa tài khoản này?')" title="Xóa">
                                             <i class="fa-solid fa-trash"></i>
                                         </a>
                                     </div>
@@ -94,5 +106,24 @@ require_once 'admin_layout.php';
         </div>
     </div>
 </div>
+
+<!-- Phân Trang cho Quản Lý Người Dùng -->
+<?php if ($total_pages > 1): ?>
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?page=<?= $page - 1 ?>">Trước</a>
+        </li>
+        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?page=<?= $page + 1 ?>">Sau</a>
+        </li>
+    </ul>
+</nav>
+<?php endif; ?>
 
 <?php require_once 'admin_layout_end.php'; ?>

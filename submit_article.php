@@ -6,10 +6,22 @@ error_reporting(E_ALL);
 session_start();
 
 require_once __DIR__ . '/config/db.php';
-require_once __DIR__ . '/includes/functions.php';
+
+// Kiểm tra nếu có file functions.php thì mới require để tránh lỗi
+if (file_exists(__DIR__ . '/includes/functions.php')) {
+    require_once __DIR__ . '/includes/functions.php';
+}
+
 require_once __DIR__ . '/classes/Category.php';
 
-if (!function_exists('isLoggedIn') || !isLoggedIn()) {
+// Hàm kiểm tra đăng nhập dự phòng nếu chưa có trong functions
+if (!function_exists('isLoggedIn')) {
+    function isLoggedIn() {
+        return isset($_SESSION['user']) || isset($_SESSION['user_id']);
+    }
+}
+
+if (!isLoggedIn()) {
     header('Location: login.php');
     exit;
 }
@@ -28,7 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($title) || empty($content) || empty($category_id)) {
         $error = 'Vui lòng điền đầy đủ tiêu đề, danh mục và nội dung bài viết!';
     } else {
-        $imageName = 'default.jpg';
+        // Mặc định nếu không tải ảnh thì lấy ảnh mặc định
+        $imageName = 'assets/img/bacbaphi.jpg'; 
+
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $fileTmpPath = $_FILES['image']['tmp_name'];
             $fileName = $_FILES['image']['name'];
@@ -37,13 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (in_array($fileExtension, $allowedExtensions)) {
                 $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
-                $uploadFileDir = __DIR__ . '/assets/images/';
+                
+                // 1. SỬA: Đổi thư mục lưu thành assets/img/ cho đồng bộ
+                $uploadFileDir = __DIR__ . '/assets/img/';
                 if (!is_dir($uploadFileDir)) {
                     mkdir($uploadFileDir, 0777, true);
                 }
+                
                 $dest_path = $uploadFileDir . $newFileName;
                 if (move_uploaded_file($fileTmpPath, $dest_path)) {
-                    $imageName = $newFileName;
+                    // 2. SỬA: Lưu đầy đủ đường dẫn assets/img/... vào CSDL
+                    $imageName = 'assets/img/' . $newFileName; 
                 }
             }
         }
@@ -72,7 +90,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="bg-light">
 
-<?php require_once 'includes/header.php'; ?>
+<?php 
+if (file_exists('includes/header.php')) {
+    require_once 'includes/header.php'; 
+}
+?>
 
 <main class="container py-5">
     <div class="row justify-content-center">
@@ -137,7 +159,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </main>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php 
+if (file_exists('includes/footer.php')) {
+    require_once 'includes/footer.php'; 
+}
+?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

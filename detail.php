@@ -9,6 +9,22 @@ require_once 'classes/Category.php';
 $article_obj = new Article($pdo);
 $comment_obj = new Comment($pdo);
 
+// Hàm xử lý đường dẫn ảnh chuẩn cho thư mục assets/img/
+function getArticleImage($imageName) {
+    if (empty($imageName)) {
+        return 'assets/img/bacbaphi.jpg'; 
+    }
+    
+    // Tự động chuyển đổi nếu DB còn dính đuôi assets/images/ cũ
+    $imageName = str_replace('assets/images/', 'assets/img/', $imageName);
+    
+    if (strpos($imageName, 'assets/img/') === 0) {
+        return htmlspecialchars($imageName);
+    }
+    
+    return 'assets/img/' . htmlspecialchars($imageName);
+}
+
 // 1. Lấy ID và kiểm tra
 $article_id = $_GET['id'] ?? 0;
 if (!$article_id) {
@@ -26,7 +42,7 @@ if (!$article) {
 $likeCount = $article_obj->getLikeCount($article_id);
 $userLiked = isLoggedIn() ? $article_obj->isLikedByUser($article_id, $_SESSION['user_id']) : false;
 
-// Kiểm tra quyền Admin (hỗ trợ nhiều cách lưu session phổ biến)
+// Kiểm tra quyền Admin
 $isAdmin = false;
 if (isLoggedIn()) {
     if ((isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ||
@@ -104,8 +120,13 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <span class="text-muted" id="like-count">❤️ <?= $likeCount ?></span>
                 </div>
 
+                <!-- Hiển thị ảnh bài viết dùng getArticleImage -->
                 <?php if (!empty($article['image'])): ?>
-                    <img src="assets/images/<?= htmlspecialchars($article['image']) ?>" class="img-fluid rounded-3 mb-4 w-100" style="max-height: 450px; object-fit: cover;" alt="<?= htmlspecialchars($article['title']) ?>">
+                    <img src="<?= getArticleImage($article['image']) ?>" 
+                         class="img-fluid rounded-3 mb-4 w-100" 
+                         style="max-height: 450px; object-fit: cover;" 
+                         alt="<?= htmlspecialchars($article['title']) ?>"
+                         onerror="this.src='assets/img/bacbaphi.jpg';">
                 <?php endif; ?>
 
                 <div class="lead lh-lg mb-4"><?= nl2br(htmlspecialchars($article['content'])) ?></div>
@@ -120,9 +141,9 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <a href="login.php" class="btn btn-outline-primary">❤️ Đăng nhập để thả cảm xúc</a>
                     <?php endif; ?>
                     
-                    <!-- Nút Chia Sẻ mở Modal -->
-                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#shareModal">
-                        <i class="fa-solid fa-share-nodes me-1"></i> Chia Sẻ
+                    <!-- Nút Chia Sẻ Gọi Hàm Thông Minh -->
+                    <button class="btn btn-secondary px-3 py-2 fw-semibold rounded-3" onclick="shareArticle()">
+                        <i class="fa-solid fa-share-nodes me-2"></i>Chia Sẻ
                     </button>
                 </div>
             </article>
@@ -143,7 +164,7 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <label for="comment_content" class="form-label fw-semibold">
                                     Viết bình luận với tư cách: <span class="text-success"><?= htmlspecialchars($_SESSION['username'] ?? '') ?></span>
                                 </label>
-                                <textarea class="form-control rounded-3" id="comment_content" name="comment_content" rows="3" placeholder="Ní thấy bài viết này thế nào? Chia sẻ ý kiến nhé..." required></textarea>
+                                <textarea class="form-control rounded-3" id="comment_content" name="comment_content" rows="3" placeholder="Bạn thấy bài viết này thế nào? Chia sẻ ý kiến nhé..." required></textarea>
                             </div>
                             <div class="text-end">
                                 <button type="submit" class="btn btn-success px-4 rounded-pill fw-semibold">
@@ -153,7 +174,7 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </form>
                     <?php else: ?>
                         <div class="text-center py-3">
-                            <p class="text-muted mb-2">Ní cần đăng nhập để tham gia bình luận bài viết này nhé!</p>
+                            <p class="text-muted mb-2">Bạn cần đăng nhập để tham gia bình luận bài viết này nhé!</p>
                             <a href="login.php" class="btn btn-outline-primary btn-sm rounded-pill px-4">Đăng Nhập Ngay</a>
                         </div>
                     <?php endif; ?>
@@ -163,11 +184,10 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="comment-list d-flex flex-column gap-3">
                     <?php if (!empty($comments)): ?>
                         <?php foreach ($comments as $com): 
-                            $com_username = $com['user_name'] ?? $com['username'] ?? 'Thành viên';
+                            $com_username = !empty($com['user_name']) ? $com['user_name'] : (!empty($com['username']) ? $com['username'] : 'Thành viên');
                         ?>
                             <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
                                 <div class="d-flex align-items-start gap-3">
-                                    <!-- Avatar Chữ Đầu -->
                                     <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5 flex-shrink-0" style="width: 45px; height: 45px;">
                                         <?= strtoupper(mb_substr($com_username, 0, 1)) ?>
                                     </div>
@@ -182,7 +202,6 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <?= nl2br(htmlspecialchars($com['content'] ?? '')) ?>
                                         </p>
 
-                                        <!-- Nút Tương Tác: Thả Tim, Trả Lời & Xóa/Tố Cáo -->
                                         <div class="d-flex align-items-center gap-3 pt-1">
                                             <button class="btn btn-sm text-danger border-0 p-0 btn-like-comment" data-id="<?= $com['id'] ?>">
                                                 <i class="<?= $com['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
@@ -195,20 +214,23 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 </button>
 
                                                 <?php if ($isAdmin): ?>
-                                                    <!-- Nút Xóa dành riêng cho Admin -->
-                                                    <a href="delete_comment.php?id=<?= $com['id'] ?>" onclick="return confirm('Ní có chắc chắn muốn xóa bình luận này không?')" class="btn btn-sm text-danger border-0 p-0 ms-2 text-decoration-none" style="font-size: 0.85rem;">
+                                                    <a href="delete_comment.php?id=<?= $com['id'] ?>" onclick="return confirm('Bạn có chắc chắn muốn xóa bình luận này không?')" class="btn btn-sm text-danger border-0 p-0 ms-2 text-decoration-none" style="font-size: 0.85rem;">
                                                         <i class="fa-solid fa-trash me-1"></i>Xóa
                                                     </a>
                                                 <?php else: ?>
-                                                    <!-- Nút Tố cáo dành cho User thường -->
-                                                    <button class="btn btn-sm text-danger border-0 p-0 ms-2" onclick="showReportModal(<?= $com['id'] ?>)" style="font-size: 0.85rem;">
+                                                    <!-- Nút Tố Cáo Bình Luận Chính Kích Hoạt Modal Chuẩn -->
+                                                    <button type="button" 
+                                                            class="btn btn-sm text-danger border-0 p-0 ms-2 fw-bold" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#reportModal" 
+                                                            onclick="document.getElementById('report_comment_id').value = <?= $com['id'] ?>" 
+                                                            style="font-size: 0.85rem;">
                                                         <i class="fa-solid fa-flag me-1"></i>Tố cáo
                                                     </button>
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
 
-                                        <!-- Form Trả Lời (Ẩn mặc định) -->
                                         <div class="reply-form mt-3 d-none" id="reply-form-<?= $com['id'] ?>">
                                             <form action="detail.php?id=<?= $article_id ?>#comments" method="POST">
                                                 <input type="hidden" name="parent_id" value="<?= $com['id'] ?>">
@@ -219,7 +241,6 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </form>
                                         </div>
 
-                                        <!-- HIỂN THỊ CÁC BÌNH LUẬN CON (REPLIES) -->
                                         <?php
                                         $sql_replies = "SELECT c.*, 
                                                        (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) as like_count,
@@ -235,7 +256,7 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php if (!empty($replies)): ?>
                                             <div class="replies-list mt-3 pt-3 border-top">
                                                 <?php foreach ($replies as $reply): 
-                                                    $reply_username = $reply['user_name'] ?? $reply['username'] ?? 'Thành viên';
+                                                    $reply_username = !empty($reply['user_name']) ? $reply['user_name'] : (!empty($reply['username']) ? $reply['username'] : 'Thành viên');
                                                 ?>
                                                     <div class="d-flex align-items-start gap-2 mb-2">
                                                         <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 30px; height: 30px; font-size: 0.75rem;">
@@ -255,11 +276,17 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                 </button>
                                                                 <?php if (isLoggedIn()): ?>
                                                                     <?php if ($isAdmin): ?>
-                                                                        <a href="delete_comment.php?id=<?= $reply['id'] ?>" onclick="return confirm('Ní có chắc chắn muốn xóa bình luận này không?')" class="btn btn-sm text-danger border-0 p-0 ms-2 text-decoration-none" style="font-size: 0.75rem;">
+                                                                        <a href="delete_comment.php?id=<?= $reply['id'] ?>" onclick="return confirm('Bạn có chắc chắn muốn xóa bình luận này không?')" class="btn btn-sm text-danger border-0 p-0 ms-2 text-decoration-none" style="font-size: 0.75rem;">
                                                                             <i class="fa-solid fa-trash me-1"></i>Xóa
                                                                         </a>
                                                                     <?php else: ?>
-                                                                        <button class="btn btn-sm text-danger border-0 p-0 ms-2" onclick="showReportModal(<?= $reply['id'] ?>)" style="font-size: 0.75rem;">
+                                                                        <!-- Nút Tố Cáo Bình Luận Trả Lời Kích Hoạt Modal Chuẩn -->
+                                                                        <button type="button" 
+                                                                                class="btn btn-sm text-danger border-0 p-0 ms-2 fw-bold" 
+                                                                                data-bs-toggle="modal" 
+                                                                                data-bs-target="#reportModal" 
+                                                                                onclick="document.getElementById('report_comment_id').value = <?= $reply['id'] ?>" 
+                                                                                style="font-size: 0.75rem;">
                                                                             <i class="fa-solid fa-flag me-1"></i>Tố cáo
                                                                         </button>
                                                                     <?php endif; ?>
@@ -285,87 +312,83 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </section>
         </div>
 
-        <!-- Sidebar -->
         <div class="col-lg-4">
         </div>
     </div>
 </main>
 
 <!-- MODAL TỐ CÁO BÌNH LUẬN -->
-<div class="modal fade" id="reportModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="report_comment.php" method="POST" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Báo cáo bình luận vi phạm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="report_comment.php" method="POST" class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Báo cáo bình luận vi phạm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body py-3">
                 <input type="hidden" name="comment_id" id="report_comment_id">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Lý do tố cáo:</label>
-                    <select name="reason" class="form-select" required>
+                    <select name="reason" class="form-select rounded-3" required>
                         <option value="Spam / Quảng cáo">Spam / Quảng cáo</option>
                         <option value="Ngôn từ thô tục / Xúc phạm">Ngôn từ thô tục / Xúc phạm</option>
                         <option value="Thông tin sai lệch">Thông tin sai lệch</option>
-                        <option value="Khác">Lý do khác</option>
+                        <option value="Lý do khác">Lý do khác</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Chi tiết thêm (tùy chọn):</label>
-                    <textarea name="detail" class="form-control" rows="3" placeholder="Nhập mô tả chi tiết nếu cần..."></textarea>
+                    <textarea name="detail" class="form-control rounded-3" rows="3" placeholder="Nhập mô tả chi tiết nếu cần..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-                <button type="submit" class="btn btn-danger btn-sm px-4">Gửi báo cáo</button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light btn-sm rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 fw-semibold">Gửi báo cáo</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL LỰA CHỌN KÊNH CHIA SẺ -->
-<div class="modal fade" id="shareModal" tabindex="-1">
+<!-- MODAL CHIA SẺ -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-share-nodes text-success me-2"></i>Chia sẻ bài viết này</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fa-solid fa-share-nodes text-success me-2"></i>Chia sẻ bài viết
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center py-4">
                 <p class="text-muted small mb-4">Chọn nền tảng bạn muốn chia sẻ bài viết đến bạn bè:</p>
                 
-                <!-- Danh sách các kênh chia sẻ -->
                 <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
-                    <!-- Facebook -->
                     <a href="#" id="share-facebook" target="_blank" class="btn btn-outline-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;" title="Chia sẻ lên Facebook">
                         <i class="fa-brands fa-facebook-f fs-5"></i>
                     </a>
                     
-                    <!-- Messenger -->
                     <a href="#" id="share-messenger" target="_blank" class="btn btn-outline-info rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;" title="Chia sẻ qua Messenger">
                         <i class="fa-brands fa-facebook-messenger fs-5"></i>
                     </a>
                     
-                    <!-- Twitter / X -->
-                    <a href="#" id="share-twitter" target="_blank" class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;" title="Chia sẻ lên Twitter/X">
-                        <i class="fa-brands fa-x-twitter fs-5"></i>
-                    </a>
-                    
-                    <!-- Zalo -->
                     <a href="#" id="share-zalo" target="_blank" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm fw-bold text-white" style="width: 50px; height: 50px; background-color: #0068ff; border-color: #0068ff;" title="Chia sẻ qua Zalo">
                         Zalo
                     </a>
+
+                    <a href="#" id="share-telegram" target="_blank" class="btn btn-outline-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;" title="Chia sẻ qua Telegram">
+                        <i class="fa-brands fa-telegram fs-5"></i>
+                    </a>
                 </div>
 
-                <!-- Ô Copy Link dự phòng -->
-                <div class="input-group">
+                <div class="input-group mb-2">
                     <input type="text" class="form-control bg-light" id="share-url-input" readonly>
                     <button class="btn btn-success px-3 fw-semibold" type="button" onclick="copyShareUrl()">
                         <i class="fa-regular fa-copy me-1"></i> Sao chép
                     </button>
                 </div>
-                <div id="copy-alert" class="text-success small mt-2 d-none fw-semibold">
-                    <i class="fa-solid fa-check me-1"></i> Đã sao chép liên kết vào bộ nhớ tạm!
+                
+                <div id="copy-alert" class="text-success small fw-semibold d-none">
+                    <i class="fa-solid fa-circle-check me-1"></i> Đã sao chép liên kết vào bộ nhớ tạm!
                 </div>
             </div>
         </div>
@@ -374,14 +397,10 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php require_once 'includes/footer.php'; ?>
 
-<script>
-// Mở modal tố cáo
-function showReportModal(commentId) {
-    document.getElementById('report_comment_id').value = commentId;
-    new bootstrap.Modal(document.getElementById('reportModal')).show();
-}
+<!-- Thư viện Bootstrap JS Bundle (Bắt buộc để Modal chạy được) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-// 1. JS Xử lý Thích Bài Viết
+<script>
 function likeArticle(articleId) {
     fetch('ajax_like.php', {
         method: 'POST',
@@ -415,32 +434,50 @@ function likeArticle(articleId) {
     .catch(error => console.error('Lỗi kết nối:', error));
 }
 
-// Khởi tạo link chia sẻ động khi trang tải xong
-document.addEventListener('DOMContentLoaded', function () {
-    const currentUrl = window.location.href;
-    const articleTitle = document.querySelector('article h1') ? document.querySelector('article h1').innerText : document.title;
-    
-    // Đưa link vào ô input copy
+// Xử lý Chia Sẻ Thông Minh
+function shareArticle() {
+    const title = <?= json_encode($article['title'] ?? 'Bài viết hay') ?>;
+    const url = window.location.href;
+
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            text: 'Mời bạn xem bài viết: ' + title,
+            url: url
+        })
+        .then(() => console.log('Chia sẻ thành công'))
+        .catch((err) => console.log('Đã hủy chia sẻ', err));
+    } else {
+        const urlInput = document.getElementById('share-url-input');
+        if (urlInput) urlInput.value = url;
+
+        document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        document.getElementById('share-messenger').href = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=291494419107518&redirect_uri=${encodeURIComponent(url)}`;
+        document.getElementById('share-zalo').href = `https://zalo.me/share?url=${encodeURIComponent(url)}`;
+        document.getElementById('share-telegram').href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+
+        const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+        shareModal.show();
+    }
+}
+
+// Sao chép liên kết
+function copyShareUrl() {
     const urlInput = document.getElementById('share-url-input');
-    if (urlInput) urlInput.value = currentUrl;
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999);
 
-    // Link chia sẻ Facebook
-    const fbBtn = document.getElementById('share-facebook');
-    if (fbBtn) fbBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`;
+    navigator.clipboard.writeText(urlInput.value).then(() => {
+        const alertBox = document.getElementById('copy-alert');
+        if (alertBox) {
+            alertBox.classList.remove('d-none');
+            setTimeout(() => alertBox.classList.add('d-none'), 3000);
+        }
+    });
+}
 
-    // Link chia sẻ Messenger
-    const messengerBtn = document.getElementById('share-messenger');
-    if (messengerBtn) messengerBtn.href = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(currentUrl)}&app_id=291494419107518&redirect_uri=${encodeURIComponent(currentUrl)}`;
-
-    // Link chia sẻ Twitter/X
-    const twitterBtn = document.getElementById('share-twitter');
-    if (twitterBtn) twitterBtn.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(articleTitle)}`;
-
-    // Link chia sẻ Zalo
-    const zaloBtn = document.getElementById('share-zalo');
-    if (zaloBtn) zaloBtn.href = `https://zalo.me/share?url=${encodeURIComponent(currentUrl)}`;
-
-    // Ẩn / Hiện khung trả lời bình luận
+document.addEventListener('DOMContentLoaded', function () {
+    // Trả lời bình luận
     document.querySelectorAll('.btn-toggle-reply').forEach(button => {
         button.addEventListener('click', function () {
             const commentId = this.getAttribute('data-id');
@@ -451,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Thả tim bình luận bằng AJAX
+    // Thả tim bình luận
     document.querySelectorAll('.btn-like-comment').forEach(button => {
         button.addEventListener('click', function () {
             const commentId = this.getAttribute('data-id');
@@ -484,19 +521,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
-
-// Hàm copy link kèm thông báo nhỏ
-function copyShareUrl() {
-    const urlInput = document.getElementById('share-url-input');
-    urlInput.select();
-    navigator.clipboard.writeText(urlInput.value);
-    
-    const alertBox = document.getElementById('copy-alert');
-    if (alertBox) {
-        alertBox.classList.remove('d-none');
-        setTimeout(() => alertBox.classList.add('d-none'), 3000);
-    }
-}
 </script>
 </body>
 </html>
