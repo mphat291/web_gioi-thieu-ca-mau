@@ -1,31 +1,26 @@
 <?php
+session_start();
+require_once '../config/db.php'; // <--- Thêm dòng này để khởi tạo biến $pdo cho các Class
+
 $page_title = "Dashboard";
 require_once 'admin_layout.php';
 
-// Khởi tạo các classes
 require_once '../classes/Article.php';
 require_once '../classes/Category.php';
 require_once '../classes/User.php';
-require_once '../classes/Comment.php';
 
 $article_obj = new Article($pdo);
 $category_obj = new Category($pdo);
 $user_obj = new User($pdo);
-$comment_obj = new Comment($pdo);
 
-// Lấy thống kê
 $total_articles = $article_obj->count();
 $total_categories = $category_obj->count();
 $total_users = $user_obj->count();
 $total_admins = $user_obj->countAdmins();
-$total_comments = $comment_obj->count();
-$pending_comments = $comment_obj->countPending();
 
-// Lấy bài viết mới nhất
 $latest_articles = $article_obj->getAll(5, 0);
 ?>
 
-<!-- Bổ sung CSS cho mượt UI -->
 <style>
     .stat-card {
         border: none;
@@ -49,7 +44,6 @@ $latest_articles = $article_obj->getAll(5, 0);
     }
     .bg-blue-light { background: #e0f2fe; color: #0284c7; }
     .bg-emerald-light { background: #d1fae5; color: #059669; }
-    .bg-amber-light { background: #fef3c7; color: #d97706; }
     .bg-purple-light { background: #f3e8ff; color: #7c3aed; }
     
     .content-card {
@@ -67,10 +61,8 @@ $latest_articles = $article_obj->getAll(5, 0);
     }
 </style>
 
-<!-- Thống Kê Chính -->
 <div class="row g-4 mb-4 mt-1">
-    <!-- Bài Viết -->
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-md-4">
         <div class="card stat-card p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -85,8 +77,7 @@ $latest_articles = $article_obj->getAll(5, 0);
         </div>
     </div>
 
-    <!-- Danh Mục -->
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-md-4">
         <div class="card stat-card p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -101,24 +92,7 @@ $latest_articles = $article_obj->getAll(5, 0);
         </div>
     </div>
 
-    <!-- Bình Luận -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-muted fw-semibold small text-uppercase">Bình Luận Chờ</span>
-                    <h2 class="fw-bold mb-0 mt-1 text-warning"><?= $pending_comments ?></h2>
-                    <a href="comments.php" class="text-warning text-decoration-none small fw-semibold">Duyệt ngay <i class="fa-solid fa-arrow-right ms-1"></i></a>
-                </div>
-                <div class="icon-box bg-amber-light">
-                    <i class="fa-solid fa-clock"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Người Dùng -->
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-md-4">
         <div class="card stat-card p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
@@ -135,7 +109,6 @@ $latest_articles = $article_obj->getAll(5, 0);
 </div>
 
 <div class="row g-4 mb-4">
-    <!-- Bài Viết Mới Nhất -->
     <div class="col-lg-8">
         <div class="card content-card p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -191,9 +164,7 @@ $latest_articles = $article_obj->getAll(5, 0);
         </div>
     </div>
 
-    <!-- Thông Tin Nhanh -->
     <div class="col-lg-4">
-        <!-- Thống Kê Tổng Hợp -->
         <div class="card content-card p-4 mb-4">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Thống Kê Nhanh</h5>
             <div class="d-flex flex-column gap-3">
@@ -202,21 +173,12 @@ $latest_articles = $article_obj->getAll(5, 0);
                     <span class="fw-bold"><?= $total_articles ?></span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
-                    <span class="text-muted"><i class="fa-solid fa-comments me-2 text-info"></i>Tổng Bình Luận:</span>
-                    <span class="fw-bold"><?= $total_comments ?></span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
-                    <span class="text-muted"><i class="fa-solid fa-circle-exclamation me-2 text-warning"></i>Chờ Duyệt:</span>
-                    <span class="fw-bold text-warning"><?= $pending_comments ?></span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
                     <span class="text-muted"><i class="fa-solid fa-user-shield me-2 text-success"></i>Quản trị viên:</span>
                     <span class="fw-bold"><?= $total_admins ?></span>
                 </div>
             </div>
         </div>
 
-        <!-- Liên Kết Nhanh -->
         <div class="card content-card p-4">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Liên Kết Nhanh</h5>
             <div class="d-grid gap-2">
@@ -225,9 +187,6 @@ $latest_articles = $article_obj->getAll(5, 0);
                 </a>
                 <a href="categories.php" class="btn btn-outline-secondary rounded-3 text-start py-2">
                     <i class="fa-solid fa-folder-plus me-2"></i> Thêm Danh Mục
-                </a>
-                <a href="comments.php" class="btn btn-outline-warning rounded-3 text-start py-2">
-                    <i class="fa-solid fa-check-double me-2"></i> Duyệt Bình Luận
                 </a>
             </div>
         </div>

@@ -3,6 +3,7 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
+// Kiểm tra đăng nhập
 if (!isLoggedIn()) {
     header('Location: login.php');
     exit();
@@ -10,13 +11,13 @@ if (!isLoggedIn()) {
 
 $user_id = $_SESSION['user_id'];
 
-// Lấy danh sách bài viết trong bảng bookmarks của người dùng
-$sql = "SELECT a.*, c.category_name 
-        FROM bookmarks b 
-        JOIN articles a ON b.article_id = a.id 
+// Lấy danh sách bài viết từ bảng saved_posts đúng với cơ sở dữ liệu của bạn
+$sql = "SELECT a.*, s.created_at as saved_at, c.category_name 
+        FROM saved_posts s 
+        JOIN articles a ON s.article_id = a.id 
         LEFT JOIN categories c ON a.category_id = c.id 
-        WHERE b.user_id = ? 
-        ORDER BY b.created_at DESC";
+        WHERE s.user_id = ? 
+        ORDER BY s.created_at DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -71,7 +72,7 @@ $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?= mb_substr(strip_tags($item['content']), 0, 100) ?>...
                             </p>
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
-                                <small class="text-muted"><i class="fa-regular fa-clock me-1"></i><?= formatDate($item['created_at'], 'd/m/Y') ?></small>
+                                <small class="text-muted"><i class="fa-regular fa-clock me-1"></i><?= date('d/m/Y', strtotime($item['saved_at'])) ?></small>
                                 <a href="detail.php?id=<?= $item['id'] ?>" class="btn btn-sm btn-outline-success rounded-pill px-3">Đọc bài này</a>
                             </div>
                         </div>
@@ -83,7 +84,7 @@ $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="text-center py-5 bg-white rounded-4 shadow-sm">
             <i class="fa-regular fa-star fs-1 text-warning mb-3 d-block"></i>
             <h5 class="fw-bold text-secondary">Ní chưa lưu bài viết nào hết!</h5>
-            <p class="text-muted">Bấm vào nút "☆ Lưu" ở cuối bài viết để lưu lại đọc sau nhé.</p>
+            <p class="text-muted">Bấm vào nút "Lưu" ở cuối bài viết để lưu lại đọc sau nhé.</p>
             <a href="index.php" class="btn btn-success rounded-pill px-4 mt-2">Khám phá bài viết ngay</a>
         </div>
     <?php endif; ?>

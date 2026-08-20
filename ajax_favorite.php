@@ -1,39 +1,40 @@
 <?php
 session_start();
-header('Content-Type: application/json');
-
 require_once 'config/db.php';
 require_once 'includes/functions.php';
-require_once 'classes/Article.php';
+
+header('Content-Type: application/json');
 
 if (!isLoggedIn()) {
     echo json_encode(['status' => 'error', 'message' => 'Vui lòng đăng nhập để lưu bài viết!']);
-    exit();
+    exit;
 }
 
-$article_id = isset($_POST['article_id']) ? (int)$_POST['article_id'] : 0;
-$user_id = $_SESSION['user_id'] ?? 0;
+$user_id = $_SESSION['user_id'];
+$article_id = isset($_POST['article_id']) ? intval($_POST['article_id']) : 0;
 
-if (!$article_id || !$user_id) {
-    echo json_encode(['status' => 'error', 'message' => 'Dữ liệu không hợp lệ!']);
-    exit();
+if ($article_id <= 0) {
+    echo json_encode(['status' => 'error', 'message' => 'ID bài viết không hợp lệ!']);
+    exit;
 }
 
-$article_obj = new Article($pdo);
+try {
+    $stmt = $pdo->prepare("SELECT id FROM favorites WHERE user_id = ? AND article_id = ?");
+    $stmt->execute([$user_id, $article_id]);
+    $favorited = $stmt->fetch();
 
-// Toggle trạng thái lưu / bỏ lưu bài viết
-if ($article_obj->isFavoritedByUser($article_id, $user_id)) {
-    $result = $article_obj->removeFavoriteByUser($article_id, $user_id);
-    if ($result) {
-        echo json_encode(['status' => 'success', 'action' => 'unfavorited', 'message' => 'Đã bỏ lưu bài viết']);
+    if ($favorited) {
+        $stmt = $pdo->prepare("DELETE FROM favorites WHERE user_id = ? AND article_id = ?");
+        $stmt->execute([$user_id, $article_id]);
+        $action = 'unfavorited';
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Lỗi khi bỏ lưu!']);
+        $stmt = $pdo->prepare("INSERT INTO favorites (user_id, article_id) VALUES (?, ?)");
+        $stmt->execute([$user_id, $article_id]);
+        $action = 'favorited';
     }
-} else {
-    $result = $article_obj->addFavoriteByUser($article_id, $user_id);
-    if ($result) {
-        echo json_encode(['status' => 'success', 'action' => 'favorited', 'message' => 'Đã lưu bài viết thành công!']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Lỗi khi lưu bài viết!']);
-    }
+
+    echo json_encode(['status' => 'success', 'action' => $action]);
+} catch (Exception $e) {
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+?>

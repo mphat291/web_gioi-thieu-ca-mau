@@ -9,7 +9,7 @@ $article_obj = new Article($pdo);
 $category_obj = new Category($pdo);
 
 // Lấy ID danh mục (hoặc từ URL parameter)
-$category_id = $_GET['id'] ?? $_GET['cat'] ?? 0;
+$category_id = $_GET['id'] ?? $_GET['category'] ?? 0;
 $search = $_GET['search'] ?? '';
 
 $articles = [];
@@ -23,6 +23,14 @@ if ($category_id) {
     }
     $articles = $article_obj->getByCategory($category_id, 12, 0);
     $page_title = htmlspecialchars($category['category_name']);
+
+    // Nếu có thêm từ khóa tìm kiếm trong danh mục này, lọc trực tiếp mảng bài viết
+    if (!empty($search)) {
+        $articles = array_filter($articles, function($item) use ($search) {
+            return mb_stripos($item['title'], $search) !== false || mb_stripos($item['content'], $search) !== false;
+        });
+        $page_title .= ' - Tìm kiếm: ' . htmlspecialchars($search);
+    }
 } elseif ($search) {
     $articles = $article_obj->search($search, 12, 0);
     $page_title = 'Kết quả tìm kiếm: ' . htmlspecialchars($search);
@@ -63,47 +71,7 @@ $categories = $category_obj->getAll();
     <div class="row g-4">
         <!-- Sidebar Filters -->
         <div class="col-lg-3">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">🔍 Bộ Lọc</h6>
-                </div>
-                <div class="card-body">
-                    <!-- Search -->
-                    <form method="GET" class="mb-3">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Tìm kiếm..." value="<?= htmlspecialchars($search) ?>">
-                            <button class="btn btn-primary" type="submit">🔍</button>
-                        </div>
-                    </form>
-
-                    <!-- Categories -->
-                    <div class="mb-3">
-                        <h6 class="fw-bold mb-3">📁 Danh Mục</h6>
-                        <div class="d-flex flex-column gap-2">
-                            <a href="category.php" class="text-decoration-none <?= !$category_id ? 'fw-bold text-primary' : '' ?>">
-                                📌 Tất Cả
-                            </a>
-                            <?php foreach ($categories as $cat): ?>
-                                <a href="category.php?id=<?= $cat['id'] ?>" 
-                                   class="text-decoration-none <?= $category_id == $cat['id'] ? 'fw-bold text-primary' : '' ?>">
-                                    📌 <?= htmlspecialchars($cat['category_name']) ?>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Info Card -->
-            <div class="card shadow-sm border-0 bg-warning">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-2">💡 Mẹo</h6>
-                    <p class="small mb-0">
-                        Sử dụng bộ lọc bên cạnh để tìm kiếm bài viết theo danh mục hoặc từ khóa.
-                    </p>
-                </div>
-            </div>
+            <?php require_once 'includes/sidebar.php'; ?>
         </div>
 
         <!-- Content -->
@@ -131,10 +99,10 @@ $categories = $category_obj->getAll();
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center mb-3 small text-secondary">
                                         <span>👁️ <?= $article['views'] ?? 0 ?></span>
-                                        <span>❤️ <?= $article['likes'] ?? 0 ?></span>
+                                        <span>❤️ <?= $article['real_likes'] ?? 0 ?></span>
                                         <span><?= formatDate($article['created_at'], 'd/m') ?></span>
                                     </div>
-                                    <a href="detail.php?id=<?= $article['id'] ?>" class="btn btn-sm btn-primary">
+                                    <a href="detail.php?id=<?= $article['id'] ?>" class="btn btn-sm btn-primary mt-auto">
                                         Đọc Tiếp →
                                     </a>
                                 </div>
@@ -142,17 +110,10 @@ $categories = $category_obj->getAll();
                         </div>
                     <?php endforeach; ?>
                 </div>
-
-                <!-- Pagination -->
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <!-- Thêm pagination logic ở đây nếu cần -->
-                    </ul>
-                </nav>
             <?php else: ?>
                 <div class="alert alert-info text-center py-5">
                     <h5>📭 Không Tìm Thấy Bài Viết</h5>
-                    <p class="mb-0">Hiện tại chưa có bài viết nào trong danh mục này. Hãy quay lại sau!</p>
+                    <p class="mb-0">Hiện tại chưa có bài viết nào phù hợp với yêu cầu của bạn.</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -162,6 +123,33 @@ $categories = $category_obj->getAll();
 <?php require_once 'includes/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script Live Search mượt mà -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function() {
+        const keyword = this.value.toLowerCase().trim();
+        const articleCols = document.querySelectorAll('.col-lg-9 .row.g-4 > .col-md-6');
+
+        articleCols.forEach(col => {
+            const titleEl = col.querySelector('.card-title');
+            const textEl = col.querySelector('.card-text');
+            
+            const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+            const text = textEl ? textEl.textContent.toLowerCase() : '';
+
+            if (title.includes(keyword) || text.includes(keyword)) {
+                col.style.display = ''; // Hiện bài viết khớp
+            } else {
+                col.style.display = 'none'; // Ẩn bài viết không khớp
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>
