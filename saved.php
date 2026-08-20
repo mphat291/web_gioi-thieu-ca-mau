@@ -21,6 +21,21 @@ $sql = "SELECT a.*, s.created_at as saved_at, c.category_name
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Hàm hỗ trợ xử lý đường dẫn ảnh thông minh
+function getArticleImage($imageName) {
+    if (empty($imageName)) {
+        return 'assets/img/bacbaphi.jpg';
+    }
+    
+    $imageName = str_replace('assets/images/', 'assets/img/', $imageName);
+
+    if (strpos($imageName, 'assets/img/') === 0) {
+        return htmlspecialchars($imageName);
+    }
+    
+    return 'assets/img/' . htmlspecialchars($imageName);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -51,13 +66,11 @@ $saved_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php foreach ($saved_articles as $item): ?>
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                        <?php if (!empty($item['image'])): ?>
-                            <img src="assets/images/<?= htmlspecialchars($item['image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>" style="height: 200px; object-fit: cover;">
-                        <?php else: ?>
-                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fa-regular fa-image fs-1"></i>
-                            </div>
-                        <?php endif; ?>
+                        <img src="<?= getArticleImage($item['image'] ?? '') ?>" 
+                             class="card-img-top" 
+                             alt="<?= htmlspecialchars($item['title']) ?>" 
+                             style="height: 200px; object-fit: cover;"
+                             onerror="this.src='assets/img/bacbaphi.jpg';">
                         
                         <div class="card-body d-flex flex-column">
                             <div class="mb-2">

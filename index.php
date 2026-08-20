@@ -39,8 +39,6 @@ function getArticleImage($imageName) {
         return 'assets/img/bacbaphi.jpg';
     }
     
-    $imageName = str_replace('assets/images/', 'assets/img/', $imageName);
-
     if (strpos($imageName, 'assets/img/') === 0) {
         return htmlspecialchars($imageName);
     }

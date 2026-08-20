@@ -26,7 +26,7 @@ web_gioi-thieu-ca-mau/
 │   ├── admin.css           # CSS riêng cho admin panel
 │   └── responsive.css      # CSS responsive (nếu cần)
 ├── assets/
-│   ├── images/             # Thư mục lưu ảnh
+│   ├── img/               # Thư mục lưu ảnh
 │   └── js/                 # JavaScript files
 ├── admin/                  # Admin panel
 │   ├── index.php           # Dashboard
@@ -107,7 +107,7 @@ if (isAdmin()) {
 ```php
 <?php
 try {
-    $filename = uploadImage($_FILES['image'], '../assets/images/');
+    $filename = uploadImage($_FILES['image'], '../assets/img/');
     echo "Ảnh đã tải lên: " . $filename;
 } catch (Exception $e) {
     echo "Lỗi: " . $e->getMessage();

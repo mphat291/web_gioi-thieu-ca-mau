@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_article'])) {
     // Xử lý Upload Ảnh
     $image = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $target_dir = "../assets/images/";
+        $target_dir = "../assets/img/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -114,7 +114,7 @@ require_once 'admin_layout.php';
                             <td class="px-3"><?= $art['id'] ?></td>
                             <td>
                                 <?php if ($art['image']): ?>
-                                    <img src="../assets/images/<?= htmlspecialchars($art['image']) ?>" class="img-thumbnail rounded" style="width: 60px; height: 45px; object-fit: cover;">
+                                    <img src="../assets/img/<?= htmlspecialchars($art['image']) ?>" class="img-thumbnail rounded" style="width: 60px; height: 45px; object-fit: cover;">
                                 <?php else: ?>
                                     <span class="badge bg-secondary">Không ảnh</span>
                                 <?php endif; ?>

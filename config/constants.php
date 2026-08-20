@@ -8,7 +8,7 @@
 define('BASE_URL', 'http://localhost/web_gioi-thieu-ca-mau');
 define('SITE_NAME', 'Khám Phá Cà Mau');
 define('BASEPATH', dirname(dirname(__FILE__)));
-define('UPLOAD_PATH', BASEPATH . '/assets/images/');
+define('UPLOAD_PATH', BASEPATH . '/assets/img/');
 
 // ===== PAGINATION =====
 define('ITEMS_PER_PAGE', 12);
@@ -61,9 +61,9 @@ define('SESSION_NAME', 'CAMAU_SESSION');
 if (!function_exists('getImageUrl')) {
     function getImageUrl($filename) {
         if (empty($filename)) {
-            return BASE_URL . '/assets/images/default.jpg';
+            return BASE_URL . '/assets/img/default.jpg';
         }
-        return BASE_URL . '/assets/images/' . $filename;
+        return BASE_URL . '/assets/img/' . $filename;
     }
 }
 

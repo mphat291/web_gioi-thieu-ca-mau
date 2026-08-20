@@ -39,6 +39,19 @@ if ($category_id) {
 }
 
 $categories = $category_obj->getAll();
+
+// Hàm hỗ trợ xử lý đường dẫn ảnh thông minh cho assets/img/
+function getArticleImage($imageName) {
+    if (empty($imageName)) {
+        return 'assets/img/bacbaphi.jpg';
+    }
+    
+    if (strpos($imageName, 'assets/img/') === 0) {
+        return htmlspecialchars($imageName);
+    }
+    
+    return 'assets/img/' . htmlspecialchars($imageName);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -82,10 +95,11 @@ $categories = $category_obj->getAll();
                         <div class="col-md-6">
                             <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift" style="min-height: 100%; display: flex; flex-direction: column;">
                                 <div class="position-relative">
-                                    <img src="assets/images/<?= !empty($article['image']) ? htmlspecialchars($article['image']) : 'default.jpg' ?>" 
-                                         class="card-img-top" alt="<?= htmlspecialchars($article['title']) ?>"
+                                    <img src="<?= getArticleImage($article['image'] ?? '') ?>" 
+                                         class="card-img-top" 
+                                         alt="<?= htmlspecialchars($article['title']) ?>"
                                          style="height: 200px; object-fit: cover; display: block;"
-                                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';">
+                                         onerror="this.src='assets/img/bacbaphi.jpg';">
                                     <span class="badge bg-success position-absolute top-0 start-0 m-2">
                                         <?= htmlspecialchars($article['category_name'] ?? 'Chung') ?>
                                     </span>

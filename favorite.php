@@ -27,6 +27,21 @@ try {
 } catch (Exception $e) {
     $favorites = [];
 }
+
+// Hàm hỗ trợ xử lý đường dẫn ảnh thông minh
+function getArticleImage($imageName) {
+    if (empty($imageName)) {
+        return 'assets/img/bacbaphi.jpg';
+    }
+    
+    $imageName = str_replace('assets/images/', 'assets/img/', $imageName);
+
+    if (strpos($imageName, 'assets/img/') === 0) {
+        return htmlspecialchars($imageName);
+    }
+    
+    return 'assets/img/' . htmlspecialchars($imageName);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -58,10 +73,10 @@ try {
                 <div class="col">
                     <div class="card h-100 shadow-sm border-0 overflow-hidden hover-lift">
                         <div class="position-relative">
-                            <img src="assets/images/<?= !empty($item['image']) ? htmlspecialchars($item['image']) : 'default.jpg' ?>" 
+                            <img src="<?= getArticleImage($item['image'] ?? '') ?>"
                                  class="card-img-top" alt="<?= htmlspecialchars($item['title']) ?>" 
                                  style="height: 200px; object-fit: cover;"
-                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2216%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';">
+                                 onerror="this.src='assets/img/bacbaphi.jpg';">
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2">
                                 <?= htmlspecialchars($item['category_name'] ?? 'Chung') ?>
                             </span>

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_article'])) {
 
     // Nếu người dùng chọn ảnh mới thì upload ảnh mới
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $target_dir = "../assets/images/";
+        $target_dir = "../assets/img/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -73,7 +73,7 @@ require_once 'admin_layout.php';
         <div class="mb-3">
             <label class="form-label">Ảnh minh họa hiện tại:</label><br>
             <?php if ($article['image']): ?>
-                <img src="../assets/images/<?= $article['image'] ?>" height="80" class="mb-2 img-thumbnail">
+                <img src="../assets/img/<?= $article['image'] ?>" height="80" class="mb-2 img-thumbnail">
             <?php else: ?>
                 <span class="text-muted">Chưa có ảnh</span><br>
             <?php endif; ?>

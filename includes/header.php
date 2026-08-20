@@ -11,7 +11,7 @@ if (!isset($_SESSION)) {
     session_start();
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-gradient" style="background: linear-gradient(135deg, #006633 0%, #004d24 100%) !important;">
+<nav class="navbar navbar-expand-lg navbar-dark bg-gradient sticky-top shadow-sm" style="background: linear-gradient(135deg, #006633 0%, #004d24 100%) !important; z-index: 1030;">
     <div class="container-lg">
         <a class="navbar-brand fw-bold fs-4" href="index.php">
             🏖️ Khám Phá Cà Mau

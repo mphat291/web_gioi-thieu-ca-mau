@@ -70,7 +70,7 @@ function truncateText($text, $limit = 100, $suffix = '...') {
 /**
  * Upload file ảnh
  */
-function uploadImage($file, $target_dir = '../assets/images/') {
+function uploadImage($file, $target_dir = '../assets/img/') {
     if (!isset($file) || $file['error'] != 0) {
         return null;
     }

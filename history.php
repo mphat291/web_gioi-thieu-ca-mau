@@ -27,6 +27,21 @@ if (!empty($history_ids)) {
         }
     }
 }
+
+// Hàm hỗ trợ xử lý đường dẫn ảnh thông minh
+function getArticleImage($imageName) {
+    if (empty($imageName)) {
+        return 'assets/img/bacbaphi.jpg';
+    }
+    
+    $imageName = str_replace('assets/images/', 'assets/img/', $imageName);
+
+    if (strpos($imageName, 'assets/img/') === 0) {
+        return htmlspecialchars($imageName);
+    }
+    
+    return 'assets/img/' . htmlspecialchars($imageName);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -56,13 +71,11 @@ if (!empty($history_ids)) {
             <?php foreach ($articles as $article): ?>
                 <div class="col">
                     <div class="card h-100 shadow-sm border-0">
-                        <?php if (!empty($article['image'])): ?>
-                            <img src="assets/images/<?= htmlspecialchars($article['image']) ?>" 
-                                 class="card-img-top" 
-                                 alt="<?= htmlspecialchars($article['title']) ?>"
-                                 style="height: 200px; object-fit: cover;"
-                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 400%22%3E%3Crect fill=%22%23ddd%22 width=%22800%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3ECà Mau%3C/text%3E%3C/svg%3E';">
-                        <?php endif; ?>
+                        <img src="<?= getArticleImage($article['image'] ?? '') ?>"
+                             class="card-img-top" 
+                             alt="<?= htmlspecialchars($article['title']) ?>"
+                             style="height: 200px; object-fit: cover;"
+                             onerror="this.src='assets/img/bacbaphi.jpg';">
                         <div class="card-body d-flex flex-column">
                             <span class="badge bg-success mb-2 align-self-start">
                                 <?= htmlspecialchars($article['category_name'] ?? 'Chung') ?>

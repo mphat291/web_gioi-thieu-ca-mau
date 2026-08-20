@@ -104,7 +104,7 @@ class Article {
     public function delete($id) {
         $article = $this->getById($id);
         if ($article && !empty($article['image'])) {
-            $image_path = '../assets/images/' . $article['image'];
+            $image_path = '../assets/img/' . $article['image'];
             if (file_exists($image_path)) {
                 unlink($image_path);
             }
