@@ -39,7 +39,7 @@ if (!isset($_SESSION)) {
                     <a class="nav-link" href="contact.php">📧 Liên Hệ</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="saved.php">⭐ Lưu</a>
+                    <a class="nav-link" href="saved.php">⭐ Bài Viết Đã Lưu</a>
                 </li>
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
